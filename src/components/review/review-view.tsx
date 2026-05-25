@@ -17,6 +17,7 @@ import { useWikiStore } from "@/stores/wiki-store"
 import { writeFile, readFile, listDirectory, deleteFile } from "@/commands/fs"
 import { normalizePath } from "@/lib/path-utils"
 import { hasConfiguredSearchProvider } from "@/lib/web-search"
+import { useAppDialog } from "@/stores/app-dialog-store"
 
 const typeConfig: Record<ReviewItem["type"], { icon: typeof AlertTriangle; label: string; color: string }> = {
   contradiction: { icon: AlertTriangle, label: "Contradiction", color: "text-amber-500" },
@@ -33,6 +34,7 @@ export function ReviewView() {
   const clearResolved = useReviewStore((s) => s.clearResolved)
   const project = useWikiStore((s) => s.project)
   const setFileTree = useWikiStore((s) => s.setFileTree)
+  const { alert } = useAppDialog()
 
   const handleResolve = useCallback(async (id: string, action: string) => {
     const pp = project ? normalizePath(project.path) : ""
@@ -41,7 +43,10 @@ export function ReviewView() {
     if (action === "__deep_research__" && project) {
       const searchConfig = useWikiStore.getState().searchApiConfig
       if (!hasConfiguredSearchProvider(searchConfig)) {
-        window.alert("Web Search not configured. Go to Settings → Web Search to configure a provider first.")
+        await alert({
+          title: "Web Search Not Configured",
+          message: "Web Search not configured. Go to Settings → Web Search to configure a provider first.",
+        })
         return
       }
       if (item) {
